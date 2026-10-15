@@ -102,12 +102,13 @@ export default function App() {
       const chosenBallCupId = Math.floor(Math.random() * currentCupCount);
       setBallCupId(chosenBallCupId);
 
-      // Set cups on stage
-      setCups((prev) =>
-        prev.map((c) => ({
-          ...c,
+      // Set cups on stage with strictly distinct starting slots (0, 1, ..., n-1)
+      setCups(
+        Array.from({ length: currentCupCount }, (_, i) => ({
+          id: i,
+          slotIndex: i,
           isLifted: false,
-          hasBall: c.id === chosenBallCupId
+          hasBall: i === chosenBallCupId
         }))
       );
 
@@ -141,36 +142,34 @@ export default function App() {
       const swapCount = minSwaps + Math.floor((roundNum - 1) * 0.7);
       const durationMs = getTransitionDuration();
 
-      let currentCupsState = Array.from({ length: currentCupCount }, (_, i) => ({
-        id: i,
-        slotIndex: i
-      }));
+      // Permutation tracking: slotToCupId[slot] = cupId occupying that slot
+      // Guarantees each cup always has a distinct slot and cannot overlap
+      const slotToCupId: number[] = Array.from({ length: currentCupCount }, (_, i) => i);
 
       for (let s = 0; s < swapCount; s++) {
         if (!isCurrent()) return;
 
-        // Pick two distinct cups to swap
-        const idxA = Math.floor(Math.random() * currentCupCount);
-        let idxB = Math.floor(Math.random() * (currentCupCount - 1));
-        if (idxB >= idxA) idxB++;
+        // Pick two distinct slots to swap
+        const slotA = Math.floor(Math.random() * currentCupCount);
+        let slotB = Math.floor(Math.random() * (currentCupCount - 1));
+        if (slotB >= slotA) slotB++;
 
-        const cupA = currentCupsState[idxA];
-        const cupB = currentCupsState[idxB];
+        const cupAId = slotToCupId[slotA];
+        const cupBId = slotToCupId[slotB];
 
-        setActiveSwapInfo({ cupAId: cupA.id, cupBId: cupB.id });
+        setActiveSwapInfo({ cupAId, cupBId });
         sound.playShuffleSwap();
 
-        // Swap their slotIndex
-        const tempSlot = cupA.slotIndex;
-        cupA.slotIndex = cupB.slotIndex;
-        cupB.slotIndex = tempSlot;
+        // Swap the cup IDs occupying slotA and slotB
+        slotToCupId[slotA] = cupBId;
+        slotToCupId[slotB] = cupAId;
 
+        // Synchronize all cups with their exact slot indices
         setCups((prev) =>
-          prev.map((c) => {
-            if (c.id === cupA.id) return { ...c, slotIndex: cupA.slotIndex };
-            if (c.id === cupB.id) return { ...c, slotIndex: cupB.slotIndex };
-            return c;
-          })
+          prev.map((c) => ({
+            ...c,
+            slotIndex: slotToCupId.indexOf(c.id)
+          }))
         );
 
         await new Promise((r) => setTimeout(r, durationMs + 40));

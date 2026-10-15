@@ -27,16 +27,3 @@
 .animate-spin-slow {
   animation: spinSlow 8s linear infinite;
 }
-
-@keyframes cupHoverBounce {
-  0%, 100% {
-    transform: translateY(-4px) scale(1.06);
-  }
-  50% {
-    transform: translateY(-14px) scale(1.1);
-  }
-}
-
-.cup-hover-bounce:hover {
-  animation: cupHoverBounce 0.7s ease-in-out infinite;
-}

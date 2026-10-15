@@ -25,9 +25,8 @@ export const MagicCup: React.FC<MagicCupProps> = ({
   zIndex = 10,
   transitionDurationMs = 500
 }) => {
-  // Width of cups based on count
-  const cupWidth = totalCups <= 3 ? 120 : totalCups === 4 ? 100 : 86;
-  const cupHeight = totalCups <= 3 ? 145 : totalCups === 4 ? 125 : 108;
+  // Responsive width of cups so they never collide even on narrow screens
+  const cupWidth = totalCups <= 3 ? 'min(27%, 115px)' : totalCups === 4 ? 'min(21%, 95px)' : 'min(17%, 78px)';
 
   // Lift offset in px
   const liftY = isLifted ? -135 : 0;
@@ -38,9 +37,7 @@ export const MagicCup: React.FC<MagicCupProps> = ({
       id={`magic-cup-${id}`}
       onClick={isClickable ? onClick : undefined}
       className={`absolute bottom-0 flex flex-col items-center select-none transition-all ${
-        isClickable
-          ? 'cursor-pointer group cup-hover-bounce'
-          : 'pointer-events-none'
+        isClickable ? 'cursor-pointer group' : 'pointer-events-none'
       }`}
       style={{
         width: cupWidth,
@@ -51,22 +48,25 @@ export const MagicCup: React.FC<MagicCupProps> = ({
         willChange: 'left, transform'
       }}
     >
-      {/* Clickable Invitation Badge when guessing in English */}
-      {isClickable && (
-        <div className="absolute -top-10 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-[11px] tracking-wide shadow-md animate-bounce opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform">
-          Pick me!
-        </div>
-      )}
-
-      {/* SVG Cylinder Cup with Purple Star Pattern (Matches Screenshot) */}
+      {/* Inner visual container that safely handles hover lift & tap scaling without overriding translateX(-50%) */}
       <div
-        className="relative w-full transition-transform duration-200 group-active:scale-95"
-        style={{ height: cupHeight }}
+        className={`relative w-full flex flex-col items-center transition-transform duration-200 ${
+          isClickable ? 'group-hover:-translate-y-2 group-hover:scale-105 group-active:scale-95' : ''
+        }`}
       >
-        <svg
-          viewBox="0 0 100 120"
-          className="w-full h-full drop-shadow-xl overflow-visible transition-all duration-200 group-hover:drop-shadow-[0_12px_20px_rgba(168,85,247,0.4)]"
-        >
+        {/* Clickable Invitation Badge when guessing */}
+        {isClickable && (
+          <div className="absolute -top-9 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-[11px] tracking-wide shadow-md animate-bounce opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-transform">
+            Pick me!
+          </div>
+        )}
+
+        {/* SVG Cylinder Cup with Purple Star Pattern (Matches Screenshot) */}
+        <div className="relative w-full aspect-[100/120]">
+          <svg
+            viewBox="0 0 100 120"
+            className="w-full h-full drop-shadow-xl overflow-visible transition-all duration-200 group-hover:drop-shadow-[0_12px_20px_rgba(168,85,247,0.4)]"
+          >
           <defs>
             {/* Cup Body Gradient */}
             <linearGradient id={`cupBody-${id}`} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -157,14 +157,15 @@ export const MagicCup: React.FC<MagicCupProps> = ({
         )}
       </div>
 
-      {/* Ground Cast Shadow */}
-      <div
-        className="w-4/5 h-4 -mt-2 rounded-full bg-black/50 blur-[3px] transition-all group-hover:scale-90 group-hover:opacity-40"
-        style={{
-          transform: isLifted ? 'scale(0.5)' : undefined,
-          opacity: isLifted ? 0.2 : undefined
-        }}
-      />
+        {/* Ground Cast Shadow */}
+        <div
+          className="w-4/5 h-4 -mt-2 rounded-full bg-black/50 blur-[3px] transition-all group-hover:scale-90 group-hover:opacity-40"
+          style={{
+            transform: isLifted ? 'scale(0.5)' : undefined,
+            opacity: isLifted ? 0.2 : undefined
+          }}
+        />
+      </div>
     </div>
   );
 };
